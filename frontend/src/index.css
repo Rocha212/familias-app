@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #F4F5F7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar sutil, look empresarial */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #C7CDD9;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+/* Impresion: solo se ve la ficha, sin sidebar/navbar/botones */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #ficha-imprimible, #ficha-imprimible * {
+    visibility: visible;
+  }
+  #ficha-imprimible {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    box-shadow: none !important;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+}

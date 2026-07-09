@@ -1,0 +1,25 @@
+# Entorno
+.env
+*.env.local
+
+# Backend / Python
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.egg-info/
+backend/.venv/
+backend/venv/
+*.pyc
+
+# Frontend / Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Sistema operativo / editores
+.DS_Store
+.vscode/
+.idea/
+
+# Base de datos local
+*.sqlite3
+pgdata/
