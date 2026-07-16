@@ -14,7 +14,7 @@ from app.core.config import settings
 from app.core.database import Base, engine, SessionLocal
 from app.core.security import hash_password
 from app.models.user import User, RolUsuario
-from app.models import familia  # noqa: F401  (asegura que el modelo se registre en Base)
+from app import models  # noqa: F401  (asegura que todos los modelos se registren en Base)
 
 
 def init_db() -> None:

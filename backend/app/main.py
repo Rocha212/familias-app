@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import Base, engine
+from app import models  # noqa: F401  (registra todos los modelos antes de crear tablas / atender requests)
 from app.api.routes import auth, familias, dashboard, users
 
 # Crea las tablas si no existen (para un setup simple sin migraciones).
