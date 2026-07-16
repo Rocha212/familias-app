@@ -161,3 +161,7 @@ class Familia(Base):
 
     creador = relationship("User", back_populates="fichas_creadas", foreign_keys=[created_by_id])
     modificador = relationship("User", foreign_keys=[updated_by_id])
+
+    revision_estrategica = relationship(
+        "RevisionEstrategica", back_populates="familia", uselist=False, cascade="all, delete-orphan"
+    )

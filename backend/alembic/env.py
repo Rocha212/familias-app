@@ -15,6 +15,8 @@ from app.core.database import Base
 from app.models import familia  # noqa: F401
 from app.models import user  # noqa: F401
 
+from app.models import revision_estrategica  # noqa: F401
+
 config = context.config
 
 # Inyecta la URL real de la base de datos (desde variables de entorno / .env)
