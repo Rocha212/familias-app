@@ -14,7 +14,7 @@ from app.schemas.familia import (
     FamiliaOut,
     FamiliaListResponse,
 )
-from app.services import familia_service
+from app.services import familia_service, revision_service
 from app.services.pdf_service import generate_familia_pdf
 
 router = APIRouter(prefix="/familias", tags=["Fichas de Familias"])
@@ -105,9 +105,10 @@ def export_familia_pdf(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Genera y descarga el PDF de la ficha, replicando el formato visual oficial."""
+    """Genera y descarga el PDF de la ficha (3 paginas), replicando el formato visual oficial."""
     familia = _get_or_404(db, familia_id)
-    pdf_bytes = generate_familia_pdf(familia)
+    revision = revision_service.get_or_create_revision(db, familia_id, current_user)
+    pdf_bytes = generate_familia_pdf(familia, revision)
     filename = f"ficha_{familia.id}_{familia.linea_abastecimiento[:30].replace(' ', '_')}.pdf"
     return Response(
         content=pdf_bytes,
