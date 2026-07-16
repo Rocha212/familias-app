@@ -6,6 +6,8 @@ from app.core.database import Base, engine
 from app import models  # noqa: F401  (registra todos los modelos antes de crear tablas / atender requests)
 from app.api.routes import auth, familias, dashboard, users
 
+from app.api.routes import auth, familias, dashboard, users, revisiones
+
 # Crea las tablas si no existen (para un setup simple sin migraciones).
 # En un entorno de produccion maduro, reemplazar por Alembic.
 Base.metadata.create_all(bind=engine)
@@ -26,6 +28,7 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 app.include_router(familias.router, prefix=settings.API_V1_PREFIX)
+app.include_router(revisiones.router, prefix=settings.API_V1_PREFIX)
 app.include_router(dashboard.router, prefix=settings.API_V1_PREFIX)
 app.include_router(users.router, prefix=settings.API_V1_PREFIX)
 
