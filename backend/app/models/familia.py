@@ -22,29 +22,72 @@ class CuadranteKraljic(str, enum.Enum):
     RUTINARIO = "rutinario"
 
 
-# Estructura por defecto de los bloques JSON, usada al crear una ficha nueva
+class NivelPoder(str, enum.Enum):
+    BAJO = "bajo"
+    ALTO = "alto"
+
+
+# ---------------------------------------------------------------------------
+# Estructuras por defecto de los bloques JSON, usadas al crear una ficha nueva
+# ---------------------------------------------------------------------------
+
+# Bloque STATUS: conteos simples (no series temporales)
 STATUS_DEFAULT = {
-    "spend_2025": 0,
     "num_proveedores": 0,
-    "spend_under_control": 0,
-    "num_proveedores_suc": 0,
+    "num_ocs": 0,
 }
 
+# Serie temporal generica Y-1 / Y / Y+1, reutilizada dentro de ANALISIS_INTERNO
+SERIE_ANUAL_DEFAULT = {
+    "y_menos_1": 0,
+    "y": 0,
+    "y_mas_1": 0,
+}
+
+# Bloque ANALISIS INTERNO: tres metricas, cada una con su serie Y-1/Y/Y+1
+ANALISIS_INTERNO_DEFAULT = {
+    "spend": dict(SERIE_ANUAL_DEFAULT),
+    "pct_cobertura": dict(SERIE_ANUAL_DEFAULT),
+    "spend_under_control": dict(SERIE_ANUAL_DEFAULT),
+}
+
+# Bloque CLASIFICACION PROVEEDORES: 4 categorias segun matriz Kraljic
 CLASIFICACION_PROVEEDORES_DEFAULT = {
+    "apalancados": [],
     "estrategicos": [],
-    "clave": [],
-    "tacticos": [],
+    "rutinarios": [],
+    "cuello_de_botella": [],
 }
 
+# Bloque CLASIFICACION CLIENTE INTERNO: 2 categorias (spend / # OCs)
 CLASIFICACION_CLIENTE_INTERNO_DEFAULT = {
-    "estrategicos": {"spend": 0, "ocs": 0},
-    "clave": {"spend": 0, "ocs": 0},
-    "tacticos": {"spend": 0, "ocs": 0},
+    "recurrentes": {"spend": 0, "ocs": 0},
+    "ocasionales": {"spend": 0, "ocs": 0},
+}
+
+# Bloque ANALISIS DOFA: 4 sub-campos estructurados
+DOFA_DEFAULT = {
+    "debilidades": "",
+    "fortalezas": "",
+    "oportunidades": "",
+    "amenazas": "",
+}
+
+# Bloque FACTORES RELEVANTES: insights + indicadores economicos y financieros
+FACTORES_RELEVANTES_DEFAULT = {
+    "insights": "",
+    "indicadores_economicos_financieros": "",
+}
+
+# Bloque PODER DE NEGOCIACION: nivel (bajo/alto) por actor
+PODER_NEGOCIACION_DEFAULT = {
+    "veolia": None,
+    "proveedor": None,
 }
 
 
 class Familia(Base):
-    """Ficha de estandarizacion de una familia de abastecimiento (Fase 1)."""
+    """Ficha de estandarizacion de una familia de abastecimiento (Fase 1 - Pagina 1: Donde estamos)."""
 
     __tablename__ = "familias"
 
@@ -55,23 +98,35 @@ class Familia(Base):
     descripcion_familia: Mapped[str] = mapped_column(Text, default="")
     lider: Mapped[str] = mapped_column(String(150), default="")
 
-    # Bloque STATUS
+    # Bloque STATUS (conteos simples)
     status: Mapped[dict] = mapped_column(JSONB, default=lambda: dict(STATUS_DEFAULT))
 
-    # Bloque ANALISIS (DOFA)
-    analisis_dofa: Mapped[str] = mapped_column(Text, default="")
-
-    # Bloque FACTORES RELEVANTES / Insights
-    factores_relevantes: Mapped[str] = mapped_column(Text, default="")
-
-    # Bloque CLASIFICACION PROVEEDORES (listas por categoria)
-    clasificacion_proveedores: Mapped[dict] = mapped_column(
-        JSONB, default=lambda: dict(CLASIFICACION_PROVEEDORES_DEFAULT)
+    # Bloque ANALISIS INTERNO (series Y-1 / Y / Y+1)
+    analisis_interno: Mapped[dict] = mapped_column(
+        JSONB, default=lambda: {k: dict(v) for k, v in ANALISIS_INTERNO_DEFAULT.items()}
     )
 
-    # Bloque KRALJIC
+    # Bloque ANALISIS DOFA (estructurado: debilidades/fortalezas/oportunidades/amenazas)
+    analisis_dofa: Mapped[dict] = mapped_column(JSONB, default=lambda: dict(DOFA_DEFAULT))
+
+    # Bloque FACTORES RELEVANTES (insights + indicadores economicos y financieros)
+    factores_relevantes: Mapped[dict] = mapped_column(
+        JSONB, default=lambda: dict(FACTORES_RELEVANTES_DEFAULT)
+    )
+
+    # Bloque CLASIFICACION PROVEEDORES (4 categorias Kraljic, listas de texto)
+    clasificacion_proveedores: Mapped[dict] = mapped_column(
+        JSONB, default=lambda: {k: list(v) for k, v in CLASIFICACION_PROVEEDORES_DEFAULT.items()}
+    )
+
+    # Bloque KRALJIC (cuadrante de la familia)
     kraljic: Mapped[CuadranteKraljic | None] = mapped_column(
         Enum(CuadranteKraljic, name="cuadrante_kraljic"), nullable=True
+    )
+
+    # Bloque PODER DE NEGOCIACION (Veolia / Proveedor: bajo o alto)
+    poder_negociacion: Mapped[dict] = mapped_column(
+        JSONB, default=lambda: dict(PODER_NEGOCIACION_DEFAULT)
     )
 
     # Bloque ACTORES PRINCIPALES
@@ -80,9 +135,10 @@ class Familia(Base):
     # Bloque PREMISAS DE NEGOCIACION
     premisas_negociacion: Mapped[str] = mapped_column(Text, default="")
 
-    # Bloque CLASIFICACION CLIENTE INTERNO (spend / # OCs por categoria)
+    # Bloque CLASIFICACION CLIENTE INTERNO (recurrentes / ocasionales -> spend / # OCs)
     clasificacion_cliente_interno: Mapped[dict] = mapped_column(
-        JSONB, default=lambda: dict(CLASIFICACION_CLIENTE_INTERNO_DEFAULT)
+        JSONB,
+        default=lambda: {k: dict(v) for k, v in CLASIFICACION_CLIENTE_INTERNO_DEFAULT.items()},
     )
 
     # Bloque SUBFAMILIAS

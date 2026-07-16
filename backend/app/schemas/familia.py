@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -6,22 +7,46 @@ from app.models.familia import (
     EstadoFicha,
     CuadranteKraljic,
     STATUS_DEFAULT,
+    ANALISIS_INTERNO_DEFAULT,
+    SERIE_ANUAL_DEFAULT,
     CLASIFICACION_PROVEEDORES_DEFAULT,
     CLASIFICACION_CLIENTE_INTERNO_DEFAULT,
+    DOFA_DEFAULT,
+    FACTORES_RELEVANTES_DEFAULT,
+    PODER_NEGOCIACION_DEFAULT,
 )
+
+NivelPoderLiteral = Literal["bajo", "alto"]
 
 
 class StatusBlock(BaseModel):
-    spend_2025: float = 0
     num_proveedores: int = 0
-    spend_under_control: float = 0
-    num_proveedores_suc: int = 0
+    num_ocs: int = 0
+
+
+class SerieAnualBlock(BaseModel):
+    """Serie de 3 valores: año anterior, año actual, año siguiente."""
+
+    y_menos_1: float = 0
+    y: float = 0
+    y_mas_1: float = 0
+
+
+class AnalisisInternoBlock(BaseModel):
+    spend: SerieAnualBlock = Field(default_factory=lambda: SerieAnualBlock(**SERIE_ANUAL_DEFAULT))
+    pct_cobertura: SerieAnualBlock = Field(
+        default_factory=lambda: SerieAnualBlock(**SERIE_ANUAL_DEFAULT)
+    )
+    spend_under_control: SerieAnualBlock = Field(
+        default_factory=lambda: SerieAnualBlock(**SERIE_ANUAL_DEFAULT)
+    )
 
 
 class ClasificacionProveedoresBlock(BaseModel):
+    apalancados: list[str] = Field(default_factory=list)
     estrategicos: list[str] = Field(default_factory=list)
-    clave: list[str] = Field(default_factory=list)
-    tacticos: list[str] = Field(default_factory=list)
+    rutinarios: list[str] = Field(default_factory=list)
+    cuello_de_botella: list[str] = Field(default_factory=list)
 
 
 class ClienteInternoItem(BaseModel):
@@ -30,9 +55,25 @@ class ClienteInternoItem(BaseModel):
 
 
 class ClasificacionClienteInternoBlock(BaseModel):
-    estrategicos: ClienteInternoItem = Field(default_factory=ClienteInternoItem)
-    clave: ClienteInternoItem = Field(default_factory=ClienteInternoItem)
-    tacticos: ClienteInternoItem = Field(default_factory=ClienteInternoItem)
+    recurrentes: ClienteInternoItem = Field(default_factory=ClienteInternoItem)
+    ocasionales: ClienteInternoItem = Field(default_factory=ClienteInternoItem)
+
+
+class DofaBlock(BaseModel):
+    debilidades: str = ""
+    fortalezas: str = ""
+    oportunidades: str = ""
+    amenazas: str = ""
+
+
+class FactoresRelevantesBlock(BaseModel):
+    insights: str = ""
+    indicadores_economicos_financieros: str = ""
+
+
+class PoderNegociacionBlock(BaseModel):
+    veolia: NivelPoderLiteral | None = None
+    proveedor: NivelPoderLiteral | None = None
 
 
 class FamiliaBase(BaseModel):
@@ -40,12 +81,20 @@ class FamiliaBase(BaseModel):
     descripcion_familia: str = ""
     lider: str = ""
     status: StatusBlock = Field(default_factory=lambda: StatusBlock(**STATUS_DEFAULT))
-    analisis_dofa: str = ""
-    factores_relevantes: str = ""
+    analisis_interno: AnalisisInternoBlock = Field(
+        default_factory=lambda: AnalisisInternoBlock(**ANALISIS_INTERNO_DEFAULT)
+    )
+    analisis_dofa: DofaBlock = Field(default_factory=lambda: DofaBlock(**DOFA_DEFAULT))
+    factores_relevantes: FactoresRelevantesBlock = Field(
+        default_factory=lambda: FactoresRelevantesBlock(**FACTORES_RELEVANTES_DEFAULT)
+    )
     clasificacion_proveedores: ClasificacionProveedoresBlock = Field(
         default_factory=lambda: ClasificacionProveedoresBlock(**CLASIFICACION_PROVEEDORES_DEFAULT)
     )
     kraljic: CuadranteKraljic | None = None
+    poder_negociacion: PoderNegociacionBlock = Field(
+        default_factory=lambda: PoderNegociacionBlock(**PODER_NEGOCIACION_DEFAULT)
+    )
     actores_principales: str = ""
     premisas_negociacion: str = ""
     clasificacion_cliente_interno: ClasificacionClienteInternoBlock = Field(
@@ -67,10 +116,12 @@ class FamiliaUpdate(BaseModel):
     descripcion_familia: str | None = None
     lider: str | None = None
     status: StatusBlock | None = None
-    analisis_dofa: str | None = None
-    factores_relevantes: str | None = None
+    analisis_interno: AnalisisInternoBlock | None = None
+    analisis_dofa: DofaBlock | None = None
+    factores_relevantes: FactoresRelevantesBlock | None = None
     clasificacion_proveedores: ClasificacionProveedoresBlock | None = None
     kraljic: CuadranteKraljic | None = None
+    poder_negociacion: PoderNegociacionBlock | None = None
     actores_principales: str | None = None
     premisas_negociacion: str | None = None
     clasificacion_cliente_interno: ClasificacionClienteInternoBlock | None = None

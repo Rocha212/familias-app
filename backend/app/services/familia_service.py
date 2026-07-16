@@ -5,6 +5,17 @@ from app.models.familia import Familia, EstadoFicha, CuadranteKraljic
 from app.models.user import User
 from app.schemas.familia import FamiliaCreate, FamiliaUpdate
 
+# Bloques JSONB que se serializan explicitamente desde sus sub-modelos Pydantic
+JSON_BLOCK_FIELDS = (
+    "status",
+    "analisis_interno",
+    "analisis_dofa",
+    "factores_relevantes",
+    "clasificacion_proveedores",
+    "poder_negociacion",
+    "clasificacion_cliente_interno",
+)
+
 
 def _attach_nombres(db: Session, familia: Familia) -> Familia:
     """Adjunta los nombres de creador/modificador como atributos dinamicos para la respuesta."""
@@ -72,9 +83,8 @@ def list_familias(
 
 def create_familia(db: Session, data: FamiliaCreate, current_user: User) -> Familia:
     payload = data.model_dump()
-    payload["status"] = data.status.model_dump()
-    payload["clasificacion_proveedores"] = data.clasificacion_proveedores.model_dump()
-    payload["clasificacion_cliente_interno"] = data.clasificacion_cliente_interno.model_dump()
+    for field in JSON_BLOCK_FIELDS:
+        payload[field] = getattr(data, field).model_dump()
 
     familia = Familia(**payload, created_by_id=current_user.id)
     db.add(familia)
@@ -88,7 +98,7 @@ def update_familia(
 ) -> Familia:
     update_data = data.model_dump(exclude_unset=True)
 
-    for field in ("status", "clasificacion_proveedores", "clasificacion_cliente_interno"):
+    for field in JSON_BLOCK_FIELDS:
         if field in update_data and update_data[field] is not None:
             update_data[field] = getattr(data, field).model_dump()
 
@@ -113,10 +123,12 @@ def duplicate_familia(db: Session, familia: Familia, current_user: User) -> Fami
         descripcion_familia=familia.descripcion_familia,
         lider=familia.lider,
         status=dict(familia.status),
-        analisis_dofa=familia.analisis_dofa,
-        factores_relevantes=familia.factores_relevantes,
+        analisis_interno=dict(familia.analisis_interno),
+        analisis_dofa=dict(familia.analisis_dofa),
+        factores_relevantes=dict(familia.factores_relevantes),
         clasificacion_proveedores=dict(familia.clasificacion_proveedores),
         kraljic=familia.kraljic,
+        poder_negociacion=dict(familia.poder_negociacion),
         actores_principales=familia.actores_principales,
         premisas_negociacion=familia.premisas_negociacion,
         clasificacion_cliente_interno=dict(familia.clasificacion_cliente_interno),
